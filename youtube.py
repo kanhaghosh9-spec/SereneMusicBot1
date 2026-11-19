@@ -10,7 +10,6 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 async def download_youtube(url: str, chat_id: int):
     if not re.match(r"^https?://(www\.)?(youtube\.com|youtu\.be)/", url):
         raise ValueError("Please provide a valid YouTube video URL.")
-
     output = os.path.join(DOWNLOAD_DIR, f"{chat_id}_%(id)s.%(ext)s")
     options = {
         "format": "bestaudio/best",
@@ -19,11 +18,7 @@ async def download_youtube(url: str, chat_id: int):
         "quiet": True,
         "no_warnings": True,
         "restrictfilenames": True,
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }],
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}],
     }
 
     def fetch():

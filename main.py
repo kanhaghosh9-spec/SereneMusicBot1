@@ -10,27 +10,17 @@ from pytgcalls import PyTgCalls
 from pytgcalls.types import AudioPiped
 
 from config import API_ID, API_HASH, BOT_TOKEN, STRING_SESSION, OWNER_ID
-from modules.youtube import download_youtube
+from youtube import download_youtube
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 log = logging.getLogger("serene")
 
-# The user account joins the voice chat. The bot account handles commands.
-assistant = Client(
-    "serene_assistant",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    session_string=STRING_SESSION,
-)
+assistant = Client("serene_assistant", api_id=API_ID, api_hash=API_HASH, session_string=STRING_SESSION)
 bot = Client("serene_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 calls = PyTgCalls(assistant)
 
 queues = {}
 current_files = {}
-play_locks = {}
 
 
 def is_owner(message: Message) -> bool:
@@ -61,9 +51,8 @@ async def next_track(chat_id):
 async def start_cmd(_, message):
     await message.reply_text(
         "🎧 **Serene Music Bot is online!**\n\n"
-        "Add me to your group and make me an admin. "
-        "The assistant account must also be in the group and have permission "
-        "to manage voice chats.\n\n"
+        "Add me to your group and make me an admin. The assistant account must also be in the group "
+        "and have permission to manage voice chats.\n\n"
         "Commands: /play, /pause, /resume, /skip, /stop, /queue, /volume"
     )
 
@@ -85,30 +74,19 @@ async def help_cmd(_, message):
 async def play_cmd(_, message):
     if not is_owner(message):
         return await message.reply_text("Only the bot owner can use this command.")
-
     chat_id = message.chat.id
     status = await message.reply_text("🔎 Getting your audio...")
-
     try:
-        if message.reply_to_message and (
-            message.reply_to_message.audio or message.reply_to_message.voice
-            or message.reply_to_message.document
-        ):
-            media = (message.reply_to_message.audio
-                     or message.reply_to_message.voice
-                     or message.reply_to_message.document)
-            path = await message.reply_to_message.download(
-                file_name=f"/tmp/serene_{chat_id}_{media.file_unique_id}"
-            )
+        replied = message.reply_to_message
+        if replied and (replied.audio or replied.voice or replied.document):
+            media = replied.audio or replied.voice or replied.document
+            path = await replied.download(file_name=f"/tmp/serene_{chat_id}_{media.file_unique_id}")
             title = getattr(media, "file_name", None) or "Telegram audio"
         else:
             if len(message.command) < 2:
-                return await status.edit_text(
-                    "Send `/play YouTube_URL` or reply to an audio file with `/play`."
-                )
+                return await status.edit_text("Send `/play YouTube_URL` or reply to an audio file with `/play`.")
             url = message.text.split(maxsplit=1)[1].strip()
             path, title = await download_youtube(url, chat_id)
-
         q = chat_queue(chat_id)
         if chat_id in current_files:
             q.append((path, title))
