@@ -7,7 +7,7 @@ from aiohttp import web
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pytgcalls import PyTgCalls
-from pytgcalls.types import AudioPiped
+from pytgcalls.types import MediaStream
 
 from config import API_ID, API_HASH, BOT_TOKEN, STRING_SESSION, OWNER_ID
 from youtube import download_youtube
@@ -32,7 +32,7 @@ def chat_queue(chat_id):
 
 
 async def start_track(chat_id, path, title="Audio"):
-    await calls.play(chat_id, AudioPiped(path))
+    await calls.play(chat_id, MediaStream(path))
     current_files[chat_id] = path
     return title
 
